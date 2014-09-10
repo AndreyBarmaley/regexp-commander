@@ -348,7 +348,7 @@ void Dialog::applyChanges()
         }
         if(nochanges) continue;
 
-        QFile(fr->path).rename(fr->path.append(backup_suffix));
+        QFile(fr->path).rename(QString(fr->path).append(backup_suffix));
 
         QFile file(fr->path);
         if(file.open(QIODevice::WriteOnly))
