@@ -57,9 +57,10 @@ struct Content : QStringList
 
             if(-1 != (pos = ruleset.findRegexp().indexIn(*it, 0)))
             {
-                QString orig = *it;
+                //QString orig = *it;
                 (*it).replace(ruleset.findRegexp(), ruleset.replacedString());
                 replacedContent.changes++;
+                //qDebug() << orig << " : " << *it;
             }
         }
 
@@ -335,6 +336,17 @@ void Dialog::applyChanges()
     {
         FileRevision* fr = dynamic_cast<FileRevision*>(ui->treeWidgetFiles->topLevelItem(indexFile));
         if(Qt::Unchecked == fr->checkState(0)) continue;
+        if(fr->contentRevisions.size() < 2) continue;
+
+        bool nochanges = true;
+        for(ContentRevision::ConstIterator
+            it = fr->contentRevisions.begin(); it != fr->contentRevisions.end(); ++it)
+        if((*it).changes > 0)
+        {
+            nochanges = false;
+            break;
+        }
+        if(nochanges) continue;
 
         QFile(fr->path).rename(fr->path.append(backup_suffix));
 
