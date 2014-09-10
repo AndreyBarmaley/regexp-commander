@@ -75,6 +75,10 @@ private slots:
     void    on_treeWidgetRules_customContextMenuRequested(const QPoint &);
     void    on_treeWidgetRules_doubleClicked(const QModelIndex &);
 
+    void on_treeWidgetFiles_itemClicked(QTreeWidgetItem *item, int column);
+
+    void on_treeWidgetRules_itemClicked(QTreeWidgetItem *item, int column);
+
 private:
     Ui::Dialog* ui;
     Ui::Rule*   rule;

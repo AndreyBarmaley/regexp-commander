@@ -101,13 +101,13 @@ struct ContentRevision : QList<Content>
 
 struct FileRevision : public QTreeWidgetItem
 {
-    QString         path;
     ContentRevision contentRevisions;
 
-    FileRevision(const QString & fn) : path(fn)
+    FileRevision(const QString & fn)
     {
         setText(0, QFileInfo(fn).fileName());
         setData(0, Qt::ToolTipRole, fn);
+        setData(0, Qt::UserRole, fn);
         setFlags(flags() | Qt::ItemIsUserCheckable);
         setCheckState(0, Qt::Checked);
         contentRevisions << ContentRevision(fn);
@@ -204,6 +204,7 @@ void Dialog::addNewRuleset()
         QTreeWidgetItem* item = new QTreeWidgetItem(QStringList() << ruleset.findRegexp().pattern() << ruleset.replacedString() << QString::number(0));
         item->setData(0, Qt::UserRole, ruleset.regexpPattern());
         item->setData(1, Qt::UserRole, ruleset.replacedString());
+        item->setData(2, Qt::UserRole, 0);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
         item->setCheckState(0, Qt::Checked);
         ui->treeWidgetRules->addTopLevelItem(item);
@@ -260,7 +261,7 @@ void Dialog::on_treeWidgetRules_doubleClicked(const QModelIndex & index)
                         for(int pos = 0; pos < content1.size(); ++pos)
                         {
                             if(content1[pos] != content2[pos])
-                                dialog.addContent(fr->path, content1[pos], content2[pos]);
+                                dialog.addContent(qvariant_cast<QString>(fr->data(0, Qt::UserRole)), content1[pos], content2[pos]);
                         }
                     }
                 }
@@ -317,8 +318,12 @@ void Dialog::applyChanges()
                 break;
             }
         if(nochanges) continue;
-        QFile(fr->path).rename(QString(fr->path).append(backup_suffix));
-        QFile file(fr->path);
+
+        QString origName = qvariant_cast<QString>(fr->data(0, Qt::UserRole));
+        QString backName = QString(origName).append(backup_suffix);
+        QFile(origName).rename(backName);
+
+        QFile file(origName);
         if(file.open(QIODevice::WriteOnly))
         {
             QTextStream ts(& file);
@@ -335,4 +340,28 @@ void Dialog::applyChanges()
         itemRule->setText(2, QString::number(0));
     }
     ui->pushButtonAction->setEnabled(false);
+}
+
+void Dialog::on_treeWidgetFiles_itemClicked(QTreeWidgetItem *item, int column)
+{
+    if(column == 0)
+    {
+        if(Qt::Checked == item->checkState(0))
+            qDebug() << "checked file: " << qvariant_cast<QString>(item->data(0, Qt::UserRole));
+        else
+        if(Qt::Unchecked == item->checkState(0))
+            qDebug() << "unchecked file: " << qvariant_cast<QString>(item->data(0, Qt::UserRole));
+    }
+}
+
+void Dialog::on_treeWidgetRules_itemClicked(QTreeWidgetItem *item, int column)
+{
+    if(column == 0)
+    {
+        if(Qt::Checked == item->checkState(0))
+            qDebug() << "checked rule";
+        else
+        if(Qt::Unchecked == item->checkState(0))
+            qDebug() << "unchecked rule";
+    }
 }
