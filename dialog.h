@@ -78,7 +78,6 @@ private slots:
 private:
     Ui::Dialog* ui;
     Ui::Rule*   rule;
-
     QAction*    actionAddRule;
     QAction*    actionEditRule;
     QAction*    actionDeleteRule;
