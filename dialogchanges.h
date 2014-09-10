@@ -25,8 +25,9 @@
 
 #include <QDialog>
 
-namespace Ui {
-class DialogChanges;
+namespace Ui
+{
+    class DialogChanges;
 }
 
 class DialogChanges : public QDialog
@@ -34,13 +35,13 @@ class DialogChanges : public QDialog
     Q_OBJECT
 
 public:
-    explicit DialogChanges(const QString & ruleset, QWidget *parent = 0);
+    explicit DialogChanges(const QString & ruleset, QWidget* parent = 0);
     ~DialogChanges();
 
     void    addContent(const QString &, const QString &, const QString &);
 
 private:
-    Ui::DialogChanges *ui;
+    Ui::DialogChanges* ui;
 };
 
 #endif // DIALOGCHANGES_H

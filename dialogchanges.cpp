@@ -26,16 +26,14 @@
 #include "dialogchanges.h"
 #include "ui_dialogchanges.h"
 
-DialogChanges::DialogChanges(const QString & ruleset, QWidget *parent) :
+DialogChanges::DialogChanges(const QString & ruleset, QWidget* parent) :
     QDialog(parent),
     ui(new Ui::DialogChanges)
 {
     ui->setupUi(this);
     ui->labelRuleset->setText(ruleset);
-
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "QtRegexpCommander", "settings");
     setGeometry(qvariant_cast<QRect>(settings.value("changesDialogSize", geometry())));
-
     ui->treeWidgetChanges->setColumnWidth(0, qvariant_cast<int>(settings.value("changesColumnWidth0", 200)));
     ui->treeWidgetChanges->setColumnWidth(1, qvariant_cast<int>(settings.value("changesColumnWidth1", 200)));
     ui->treeWidgetChanges->setColumnWidth(2, qvariant_cast<int>(settings.value("changesColumnWidth2", 200)));
@@ -48,7 +46,6 @@ DialogChanges::~DialogChanges()
     settings.setValue("changesColumnWidth0", ui->treeWidgetChanges->columnWidth(0));
     settings.setValue("changesColumnWidth1", ui->treeWidgetChanges->columnWidth(1));
     settings.setValue("changesColumnWidth2", ui->treeWidgetChanges->columnWidth(2));
-
     delete ui;
 }
 

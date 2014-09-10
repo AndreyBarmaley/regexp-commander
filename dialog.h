@@ -28,9 +28,10 @@
 #include <QPair>
 #include <QRegExp>
 
-namespace Ui {
-class Dialog;
-class Rule;
+namespace Ui
+{
+    class Dialog;
+    class Rule;
 }
 
 class QTreeWidgetItem;
@@ -39,9 +40,18 @@ struct RuleSet : protected QPair<QRegExp, QString>
 {
     RuleSet(const QRegExp & find, const QString & replace) : QPair<QRegExp, QString>(find, replace) {}
 
-    QString regexpPattern(void) const { return first.pattern(); }
-    const QRegExp & findRegexp(void) const { return first; }
-    const QString & replacedString(void) const { return second; }
+    QString regexpPattern(void) const
+    {
+        return first.pattern();
+    }
+    const QRegExp & findRegexp(void) const
+    {
+        return first;
+    }
+    const QString & replacedString(void) const
+    {
+        return second;
+    }
 };
 
 class Dialog : public QDialog
@@ -49,7 +59,7 @@ class Dialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit Dialog(QWidget *parent = 0);
+    explicit Dialog(QWidget* parent = 0);
     ~Dialog();
 
 signals:
@@ -66,8 +76,8 @@ private slots:
     void    on_treeWidgetRules_doubleClicked(const QModelIndex &);
 
 private:
-    Ui::Dialog *ui;
-    Ui::Rule   *rule;
+    Ui::Dialog* ui;
+    Ui::Rule*   rule;
 
     QAction*    actionAddRule;
     QAction*    actionEditRule;

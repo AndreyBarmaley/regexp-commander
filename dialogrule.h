@@ -25,8 +25,9 @@
 
 #include "dialog.h"
 
-namespace Ui {
-class RuleDialog;
+namespace Ui
+{
+    class RuleDialog;
 }
 
 class DialogRule : public QDialog
@@ -34,8 +35,8 @@ class DialogRule : public QDialog
     Q_OBJECT
 
 public:
-    explicit DialogRule(QWidget *parent = 0);
-    DialogRule(const QString &, const QString &, QWidget *parent = 0);
+    explicit DialogRule(QWidget* parent = 0);
+    DialogRule(const QString &, const QString &, QWidget* parent = 0);
     ~DialogRule();
 
     RuleSet result(void) const;
@@ -46,7 +47,7 @@ private slots:
 private:
     bool checkButton(void);
 
-    Ui::RuleDialog *ui;
+    Ui::RuleDialog* ui;
 };
 
 #endif // RULE_H

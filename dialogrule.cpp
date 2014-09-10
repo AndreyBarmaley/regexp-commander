@@ -26,21 +26,20 @@
 #include "dialogrule.h"
 #include "ui_rule.h"
 
-DialogRule::DialogRule(QWidget *parent) :
+DialogRule::DialogRule(QWidget* parent) :
     QDialog(parent),
     ui(new Ui::RuleDialog)
 {
     ui->setupUi(this);
 }
 
-DialogRule::DialogRule(const QString & find, const QString & replace, QWidget *parent) :
+DialogRule::DialogRule(const QString & find, const QString & replace, QWidget* parent) :
     QDialog(parent),
     ui(new Ui::RuleDialog)
 {
     ui->setupUi(this);
     ui->lineEditFind->setText(find);
     ui->lineEditReplace->setText(replace);
-
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "QtRegexpCommander", "settings");
     setGeometry(qvariant_cast<QRect>(settings.value("ruleDialogSize", geometry())));
 }
@@ -49,7 +48,6 @@ DialogRule::~DialogRule()
 {
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "QtRegexpCommander", "settings");
     settings.setValue("ruleDialogSize", geometry());
-
     delete ui;
 }
 

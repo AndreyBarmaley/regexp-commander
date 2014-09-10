@@ -44,26 +44,22 @@ struct Content : QStringList
 {
     int changes;
 
-    Content() : changes(0) {}
+    Content() {}
 
     Content applyRuleSet(const RuleSet & ruleset) const
     {
         Content replacedContent(*this);
-
+	replacedContent.changes = 0;
         for(QStringList::Iterator
             it = replacedContent.begin(); it != replacedContent.end(); ++it)
         {
             int pos = -1;
-
             if(-1 != (pos = ruleset.findRegexp().indexIn(*it, 0)))
             {
-                //QString orig = *it;
                 (*it).replace(ruleset.findRegexp(), ruleset.replacedString());
                 replacedContent.changes++;
-                //qDebug() << orig << " : " << *it;
             }
         }
-
         return replacedContent;
     }
 };
@@ -75,13 +71,11 @@ struct ContentRevision : QList<Content>
     ContentRevision(const QString & fn)
     {
         QFile file(fn);
-
         if(file.open(QIODevice::ReadOnly))
         {
             QTextStream ts(& file);
             QString line;
             Content content;
-
             while(true)
             {
                 QString line = ts.readLine();
@@ -90,9 +84,18 @@ struct ContentRevision : QList<Content>
                 else
                     content << line;
             }
-
             append(content);
         }
+    }
+
+    void mergeRevisions()
+    {
+	if(size())
+	{
+	    Content latest = back();
+	    clear();
+	    append(latest);
+	}
     }
 };
 
@@ -103,7 +106,6 @@ struct FileRevision : public QTreeWidgetItem
 
     FileRevision(const QString & fn) : path(fn)
     {
-
         setText(0, QFileInfo(fn).fileName());
         setData(0, Qt::ToolTipRole, fn);
         setFlags(flags() | Qt::ItemIsUserCheckable);
@@ -111,10 +113,8 @@ struct FileRevision : public QTreeWidgetItem
         contentRevisions << ContentRevision(fn);
         if(contentRevisions.front().size() < contentRevisions.back().size())
             setText(1, QString("+").append(QString::number(contentRevisions.back().size() - contentRevisions.front().size())));
-        else
-        if(contentRevisions.front().size() > contentRevisions.back().size())
+        else if(contentRevisions.front().size() > contentRevisions.back().size())
             setText(1, QString("-").append(QString::number(contentRevisions.front().size() - contentRevisions.back().size())));
-
     }
 
     int applyRuleSet(const RuleSet & ruleset, int revison)
@@ -132,15 +132,12 @@ Dialog::Dialog(QWidget* parent) :
     ui(new Ui::Dialog)
 {
     ui->setupUi(this);
-
     actionAddRule = new QAction(tr("Add"), ui->treeWidgetRules);
     actionEditRule = new QAction(tr("Edit"), ui->treeWidgetRules);
     actionDeleteRule = new QAction(tr("Delete"), ui->treeWidgetRules);
-
     actionAddRule->setEnabled(true);
     actionEditRule->setEnabled(false);
     actionDeleteRule->setEnabled(false);
-
     connect(ui->pushButtonSelect, SIGNAL(clicked()), this, SLOT(selectPath()));
     connect(actionAddRule, SIGNAL(triggered()), this, SLOT(addNewRuleset()));
     connect(actionEditRule, SIGNAL(triggered()), this, SLOT(editCurrentRuleset()));
@@ -148,14 +145,11 @@ Dialog::Dialog(QWidget* parent) :
     connect(this, SIGNAL(rulesetChanged(int)), this, SLOT(applyRuleset(int)));
     connect(ui->pushButtonAction, SIGNAL(clicked()), this, SLOT(applyChanges()));
     connect(ui->pushButtonClose, SIGNAL(clicked()), this, SLOT(close()));
-
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "QtRegexpCommander", "settings");
     setGeometry(qvariant_cast<QRect>(settings.value("mainDialogSize", geometry())));
-
     ui->treeWidgetRules->setColumnWidth(0, qvariant_cast<int>(settings.value("rulesColumnWidth0", 250)));
     ui->treeWidgetRules->setColumnWidth(1, qvariant_cast<int>(settings.value("rulesColumnWidth1", 250)));
     ui->treeWidgetRules->setColumnWidth(2, qvariant_cast<int>(settings.value("rulesColumnWidth2", 20)));
-
     ui->treeWidgetFiles->setColumnWidth(0, qvariant_cast<int>(settings.value("filesColumnWidth0", 400)));
     ui->treeWidgetFiles->setColumnWidth(1, qvariant_cast<int>(settings.value("filesColumnWidth1", 100)));
 }
@@ -175,18 +169,15 @@ Dialog::~Dialog()
 void Dialog::selectPath()
 {
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "QtRegexpCommander", "settings");
-    QString latestPath = qvariant_cast<QString>(settings.value("latestPath",""));
+    QString latestPath = qvariant_cast<QString>(settings.value("latestPath", ""));
     QString dirPath = QFileDialog::getExistingDirectory(this, tr("Open Directory"), latestPath.isEmpty() ? QDir::homePath() : latestPath, QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-
     if(dirPath.size())
     {
         settings.setValue("latestPath", dirPath);
-
-        QStringList listFiles = QDir(dirPath).entryList(QDir::Files|QDir::Readable);
-
+        QStringList listFiles = QDir(dirPath).entryList(QDir::Files | QDir::Readable);
         for(QStringList::ConstIterator
             it = listFiles.begin(); it != listFiles.end(); ++it)
-            if(! (*it).contains(QRegExp(QString(backup_suffix).append("$"))))
+            if(!(*it).contains(QRegExp(QString(backup_suffix).append("$"))))
                 ui->treeWidgetFiles->addTopLevelItem(new FileRevision(QDir::toNativeSeparators(QString(dirPath).append("/").append(*it))));
         ui->lineEditPath->setText(dirPath);
     }
@@ -195,10 +186,8 @@ void Dialog::selectPath()
 void Dialog::on_treeWidgetRules_customContextMenuRequested(const QPoint & pt)
 {
     QMenu menu(ui->treeWidgetRules);
-
     actionEditRule->setEnabled(ui->treeWidgetRules->selectedItems().size());
     actionDeleteRule->setEnabled(ui->treeWidgetRules->selectedItems().size());
-
     menu.addAction(actionAddRule);
     menu.addAction(actionEditRule);
     menu.addSeparator();
@@ -249,26 +238,21 @@ void Dialog::on_treeWidgetRules_doubleClicked(const QModelIndex & index)
 {
     if(index.column() == 0 || index.column() == 1)
         editCurrentRuleset();
-    else
-    if(index.column() == 2)
+    else if(index.column() == 2)
     {
         int count = ui->treeWidgetRules->currentItem()->text(2).toInt();
-
         if(count)
         {
             DialogChanges dialog(ui->treeWidgetRules->currentItem()->text(0), this);
-
             for(int indexFile = 0; indexFile < ui->treeWidgetFiles->topLevelItemCount(); ++indexFile)
             {
                 FileRevision* fr = dynamic_cast<FileRevision*>(ui->treeWidgetFiles->topLevelItem(indexFile));
-
                 if(fr->contentRevisions.size() <= index.row() + 1)
                     QMessageBox::warning(this, "Sorry", QString("The revision not found: %d").arg(index.row()));
                 else
                 {
                     Content content1 = fr->contentRevisions[index.row()];
                     Content content2 = fr->contentRevisions[index.row() + 1];
-
                     if(content1.size() != content2.size())
                         QMessageBox::warning(this, "Sorry", QString("The contents not match size: %d vs %d").arg(index.row()).arg(index.row() + 1));
                     else
@@ -281,7 +265,6 @@ void Dialog::on_treeWidgetRules_doubleClicked(const QModelIndex & index)
                     }
                 }
             }
-
             dialog.exec();
         }
     }
@@ -293,34 +276,23 @@ void Dialog::applyRuleset(int index)
     {
         QTreeWidgetItem* itemRule = ui->treeWidgetRules->topLevelItem(indexRule);
         if(Qt::Unchecked == itemRule->checkState(0)) continue;
-
         const QString & data0 = qvariant_cast<QString>(itemRule->data(0, Qt::UserRole));
         const QString & data1 = qvariant_cast<QString>(itemRule->data(1, Qt::UserRole));
-
         RuleSet ruleset(QRegExp(data0), data1);
-
+	int total = 0;
         for(int indexFile = 0; indexFile < ui->treeWidgetFiles->topLevelItemCount(); ++indexFile)
         {
             FileRevision* fr = dynamic_cast<FileRevision*>(ui->treeWidgetFiles->topLevelItem(indexFile));
             if(Qt::Unchecked == fr->checkState(0)) continue;
-
-            int apply = fr ? fr->applyRuleSet(ruleset, indexRule) : 0;
-
-            if(0 < apply)
-            {
-                int count = itemRule->text(2).toInt();
-                itemRule->setText(2, QString::number(count + apply));
-            }
+            total += fr ? fr->applyRuleSet(ruleset, indexRule) : 0;
         }
+        itemRule->setText(2, QString::number(total));
     }
-
     ui->pushButtonAction->setEnabled(false);
-
     for(int indexRule = 0; indexRule < ui->treeWidgetRules->topLevelItemCount(); ++indexRule)
     {
         QTreeWidgetItem* itemRule = ui->treeWidgetRules->topLevelItem(indexRule);
         int count = itemRule->text(2).toInt();
-
         if(count)
         {
             ui->pushButtonAction->setEnabled(true);
@@ -331,42 +303,36 @@ void Dialog::applyRuleset(int index)
 
 void Dialog::applyChanges()
 {
-
     for(int indexFile = 0; indexFile < ui->treeWidgetFiles->topLevelItemCount(); ++indexFile)
     {
         FileRevision* fr = dynamic_cast<FileRevision*>(ui->treeWidgetFiles->topLevelItem(indexFile));
         if(Qt::Unchecked == fr->checkState(0)) continue;
         if(fr->contentRevisions.size() < 2) continue;
-
         bool nochanges = true;
         for(ContentRevision::ConstIterator
             it = fr->contentRevisions.begin(); it != fr->contentRevisions.end(); ++it)
-        if((*it).changes > 0)
-        {
-            nochanges = false;
-            break;
-        }
+            if((*it).changes > 0)
+            {
+                nochanges = false;
+                break;
+            }
         if(nochanges) continue;
-
         QFile(fr->path).rename(QString(fr->path).append(backup_suffix));
-
         QFile file(fr->path);
         if(file.open(QIODevice::WriteOnly))
         {
             QTextStream ts(& file);
-
             for(Content::ConstIterator
                 it = fr->contentRevisions.back().begin(); it != fr->contentRevisions.back().end(); ++it)
                 ts << *it << "\n";
         }
+	fr->contentRevisions.mergeRevisions();
     }
-
     for(int indexRule = 0; indexRule < ui->treeWidgetRules->topLevelItemCount(); ++indexRule)
     {
         QTreeWidgetItem* itemRule = ui->treeWidgetRules->topLevelItem(indexRule);
         itemRule->setCheckState(0, Qt::Unchecked);
         itemRule->setText(2, QString::number(0));
     }
-
     ui->pushButtonAction->setEnabled(false);
 }
