@@ -44,7 +44,7 @@ struct Content : QStringList
 {
     int changes;
 
-    Content() {}
+    Content() : changes(0) {}
 
     Content applyRuleSet(const RuleSet & ruleset) const
     {
