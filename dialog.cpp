@@ -166,6 +166,25 @@ Dialog::~Dialog()
     delete ui;
 }
 
+QStringList recursiveReadDir(const QDir & dir)
+{
+    QFileInfoList files = dir.entryInfoList(QStringList(), QDir::AllDirs | QDir::Files | QDir::NoDotAndDotDot | QDir::Readable);
+    QStringList result;
+
+    for(QFileInfoList::ConstIterator
+	it = files.begin(); it != files.end(); ++it)
+    {
+	QString path = (*it).absoluteFilePath();
+
+        if((*it).isDir())
+	    result << recursiveReadDir(QDir(path));
+        else
+	    result << path;
+    }
+
+    return result;
+}
+
 void Dialog::selectPath()
 {
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "QtRegexpCommander", "settings");
@@ -174,11 +193,12 @@ void Dialog::selectPath()
     if(dirPath.size())
     {
         settings.setValue("latestPath", dirPath);
-        QStringList listFiles = QDir(dirPath).entryList(QDir::Files | QDir::Readable);
+	QStringList listFiles = recursiveReadDir(dirPath);
+
         for(QStringList::ConstIterator
             it = listFiles.begin(); it != listFiles.end(); ++it)
             if(!(*it).contains(QRegExp(QString(backup_suffix).append("$"))))
-                ui->treeWidgetFiles->addTopLevelItem(new FileRevision(QDir::toNativeSeparators(QString(dirPath).append("/").append(*it))));
+                ui->treeWidgetFiles->addTopLevelItem(new FileRevision(*it));
         ui->lineEditPath->setText(dirPath);
     }
 }
